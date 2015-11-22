@@ -16,6 +16,7 @@ import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeRQ;
 import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.ConsultarRQ;
 import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.InsertarRQ;
 import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.InsertarRS;
+import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.VocabularioBDD;
 import com.espe.distribuidas.pmaldito.protocolobdd.seguridad.AutenticacionRQ;
 import com.espe.distribuidas.pmaldito.seguridad.AutenticacionRS;
 import java.io.DataInputStream;
@@ -102,7 +103,7 @@ public class HiloServer extends Thread {
                             coninfCli.setCamposTabla("/");
                             coninfCli.setCodigoIdentificadorColumna("1");
                             coninfCli.setValorCodigoidentificadorColumna(idCliente);
-                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeConsultar);
+                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, VocabularioBDD.consultar);
                             mconinfCli.setCuerpo(coninfCli);
                             System.out.println("Trama Info CLiente "+mconinfCli.asTexto());
                             
