@@ -103,7 +103,7 @@ public class HiloServer extends Thread {
                             coninfCli.setCamposTabla("/");
                             coninfCli.setCodigoIdentificadorColumna("1");
                             coninfCli.setValorCodigoidentificadorColumna(idCliente);
-                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, VocabularioBDD.consultar);
+                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeConsultar);
                             mconinfCli.setCuerpo(coninfCli);
                             System.out.println("Trama Info CLiente "+mconinfCli.asTexto());
                             
