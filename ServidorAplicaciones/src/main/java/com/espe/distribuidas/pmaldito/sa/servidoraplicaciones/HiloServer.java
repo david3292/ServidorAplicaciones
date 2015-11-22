@@ -5,17 +5,24 @@
  */
 package com.espe.distribuidas.pmaldito.sa.servidoraplicaciones;
 
-import java.io.BufferedReader;
+import com.espe.distribuidas.pmaldito.cliente.IngresarClienteRS;
+import com.espe.distribuidas.pmaldito.factura.IngresarFacturaRQ;
+import com.espe.distribuidas.pmaldito.originador.Originador;
+import com.espe.distribuidas.pmaldito.pcs.Mensaje;
+import com.espe.distribuidas.pmaldito.pcs.MensajeRS;
+import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeBDD;
+import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeRQ;
+import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.InsertarRQ;
+import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.InsertarRS;
+import com.espe.distribuidas.pmaldito.protocolobdd.seguridad.AutenticacionRQ;
+import com.espe.distribuidas.pmaldito.seguridad.AutenticacionRS;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -50,11 +57,96 @@ public class HiloServer extends Thread {
             try {
                 String trama = input.readUTF();
                 System.out.println("trama:"+trama);
-                //String idMensaje
+                if (trama.equals("FIN")) {
+                    break;
+                }
+                String idMensaje = trama.substring(39,49);
+                System.out.println(idMensaje);
+                
+                switch(idMensaje){
+                    case Mensaje.AUTENTIC_USER:
+                        if(trama.length() == 105 && Mensaje.validaHash(trama)){
+                            String usuario = trama.substring(85,95);
+                            String clave = trama.substring(95,105);
+                            usuario = StringUtils.stripEnd(usuario, " ");
+                            clave = StringUtils.stripEnd(clave, " ");
+                            AutenticacionRQ auRQ= new AutenticacionRQ();
+                            auRQ.setUsuario(usuario);
+                            auRQ.setClave(clave);
+                            MensajeRQ mauRQ = new MensajeRQ(Originador.SRV_APLICACION,MensajeBDD.idMensajeAutenticacion);
+                            mauRQ.setCuerpo(auRQ);
+                            System.out.println("TramaAutenticacion "+mauRQ.asTexto());
+                            
+                            ServBase comunicacion = new ServBase();
+                            comunicacion.conexion();
+                            comunicacion.flujo(mauRQ.asTexto());
+                            
+                            String respuesta = comunicacion.flujoRS();
+                            AutenticacionRS aurs = new AutenticacionRS();
+                            aurs.build(respuesta);
+                            MensajeRS maurs = new MensajeRS(Originador.SRV_APLICACION, Mensaje.AUTENTIC_USER);
+                            maurs.setCuerpo(aurs);
+                            output.writeUTF(maurs.asTexto());                            
+                        }
+                        break;
+                    case Mensaje.INFO_CLIENT:
+                        break;
+                    case Mensaje.INFO_FACT:
+                        if(Mensaje.validaHash(trama)){
+                            String cuerpo = trama.substring(85);
+                            InsertarRQ inserfRQ = new InsertarRQ();
+                            inserfRQ.setNombreTabla(Mensaje.nombreTablaFactura);
+                            inserfRQ.setValorCamposTabla(cuerpo);
+                            MensajeRQ minserfRQ = new MensajeRQ(Originador.SRV_APLICACION, Mensaje.INSERT_FACT);
+                            minserfRQ.setCuerpo(inserfRQ);
+                            
+                            System.out.println("TramaIngresarFactura "+inserfRQ.astexto());
+                            ServBase comunicacion = new ServBase();
+                            comunicacion.conexion();
+                            comunicacion.flujo(inserfRQ.astexto());
+                            
+                            String respuesta = comunicacion.flujoRS();
+                            IngresarClienteRS incRS = new IngresarClienteRS();
+                            incRS.build(respuesta);
+                            MensajeRS mincRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INSERT_FACT);
+                            mincRS.setCuerpo(incRS);
+                            output.writeUTF(mincRS.asTexto());
+                        }
+                        break;
+                    case Mensaje.INFO_PRODUCT:
+                        break;
+                    case Mensaje.INSERT_CLIENT:
+                        if(Mensaje.validaHash(trama)){
+                            String cuerpo = trama.substring(85);
+                            InsertarRQ inserRQ = new InsertarRQ();
+                            inserRQ.setNombreTabla(Mensaje.nombreTablaCliente);
+                            inserRQ.setValorCamposTabla(cuerpo);
+                            MensajeRQ minserRQ = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeInsertar);
+                            minserRQ.setCuerpo(inserRQ);
+                            System.out.println("TramaInsertarCliente "+minserRQ.asTexto());
+                            
+                            ServBase comunicacion = new ServBase();
+                            comunicacion.conexion();
+                            comunicacion.flujo(minserRQ.asTexto());
+                            
+                            String respuesta = comunicacion.flujoRS();
+                            IngresarClienteRS incRS = new IngresarClienteRS();
+                            incRS.build(respuesta);
+                            MensajeRS  mincRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INSERT_CLIENT);
+                            mincRS.setCuerpo(incRS);
+                            output.writeUTF(mincRS.asTexto());
+                            
+                        }
+                        break;
+                    case Mensaje.INSERT_FACT:
+                        break;
+                    
+                }
 
             } catch (IOException ex) {
                 Logger.getLogger(HiloServer.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("no se pudo recibir la trama");
+                break;
             }
 
         }
