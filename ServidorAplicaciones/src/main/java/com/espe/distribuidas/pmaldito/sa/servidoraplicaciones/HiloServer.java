@@ -5,6 +5,7 @@
  */
 package com.espe.distribuidas.pmaldito.sa.servidoraplicaciones;
 
+import com.espe.distribuidas.pmaldito.cliente.InformacionClienteRS;
 import com.espe.distribuidas.pmaldito.cliente.IngresarClienteRS;
 import com.espe.distribuidas.pmaldito.factura.IngresarFacturaRQ;
 import com.espe.distribuidas.pmaldito.originador.Originador;
@@ -12,6 +13,7 @@ import com.espe.distribuidas.pmaldito.pcs.Mensaje;
 import com.espe.distribuidas.pmaldito.pcs.MensajeRS;
 import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeBDD;
 import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeRQ;
+import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.ConsultarRQ;
 import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.InsertarRQ;
 import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.InsertarRS;
 import com.espe.distribuidas.pmaldito.protocolobdd.seguridad.AutenticacionRQ;
@@ -86,10 +88,37 @@ public class HiloServer extends Thread {
                             aurs.build(respuesta);
                             MensajeRS maurs = new MensajeRS(Originador.SRV_APLICACION, Mensaje.AUTENTIC_USER);
                             maurs.setCuerpo(aurs);
-                            output.writeUTF(maurs.asTexto());                            
+                            output.writeUTF(maurs.asTexto());
+                            System.out.println("Respuesta: " + maurs.asTexto());
                         }
                         break;
                     case Mensaje.INFO_CLIENT:
+                        if(Mensaje.validaHash(trama)){
+                            String idCliente = trama.substring(85);
+                            idCliente = StringUtils.stripStart(idCliente, "0");
+                            System.out.println("Id_Cliente:"+idCliente);
+                            ConsultarRQ coninfCli = new ConsultarRQ();
+                            coninfCli.setNombreTabla(Mensaje.nombreTablaCliente);
+                            coninfCli.setCamposTabla("/");
+                            coninfCli.setCodigoIdentificadorColumna("1");
+                            coninfCli.setValorCodigoidentificadorColumna(idCliente);
+                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeConsultar);
+                            mconinfCli.setCuerpo(coninfCli);
+                            System.out.println("Trama Info CLiente "+mconinfCli.asTexto());
+                            
+                            ServBase comunicacion = new ServBase();
+                            comunicacion.conexion();
+                            comunicacion.flujo(mconinfCli.asTexto());
+                            
+                            String respuesta = comunicacion.flujoRS();
+                            InformacionClienteRS infclRS = new InformacionClienteRS();
+                            infclRS.build(respuesta);
+                            MensajeRS minfclRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INFO_CLIENT);
+                            minfclRS.setCuerpo(infclRS);
+                                                       
+                            output.writeUTF(minfclRS.asTexto());
+                            System.out.println("RespuestaInfCliente: " + minfclRS.asTexto());
+                        }
                         break;
                     case Mensaje.INFO_FACT:
                         if(Mensaje.validaHash(trama)){
@@ -135,6 +164,7 @@ public class HiloServer extends Thread {
                             MensajeRS  mincRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INSERT_CLIENT);
                             mincRS.setCuerpo(incRS);
                             output.writeUTF(mincRS.asTexto());
+                            System.out.println("Respuesta: " + mincRS.asTexto());
                             
                         }
                         break;
