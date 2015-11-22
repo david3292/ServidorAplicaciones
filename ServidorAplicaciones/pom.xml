@@ -5,6 +5,13 @@
     <artifactId>ServidorAplicaciones</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>com.espe.distribuidas.PMaldito.PCS</groupId>
+            <artifactId>ProtocoloClienteServidor</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
