@@ -11,6 +11,7 @@ import com.espe.distribuidas.pmaldito.factura.IngresarFacturaRQ;
 import com.espe.distribuidas.pmaldito.originador.Originador;
 import com.espe.distribuidas.pmaldito.pcs.Mensaje;
 import com.espe.distribuidas.pmaldito.pcs.MensajeRS;
+import com.espe.distribuidas.pmaldito.producto.InformacionProductoRS;
 import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeBDD;
 import com.espe.distribuidas.pmaldito.protocolobdd.mensajesBDD.MensajeRQ;
 import com.espe.distribuidas.pmaldito.protocolobdd.operaciones.ConsultarRQ;
@@ -122,28 +123,35 @@ public class HiloServer extends Thread {
                         }
                         break;
                     case Mensaje.INFO_FACT:
-                        if(Mensaje.validaHash(trama)){
-                            String cuerpo = trama.substring(85);
-                            InsertarRQ inserfRQ = new InsertarRQ();
-                            inserfRQ.setNombreTabla(Mensaje.nombreTablaFactura);
-                            inserfRQ.setValorCamposTabla(cuerpo);
-                            MensajeRQ minserfRQ = new MensajeRQ(Originador.SRV_APLICACION, Mensaje.INSERT_FACT);
-                            minserfRQ.setCuerpo(inserfRQ);
-                            
-                            System.out.println("TramaIngresarFactura "+inserfRQ.astexto());
-                            ServBase comunicacion = new ServBase();
-                            comunicacion.conexion();
-                            comunicacion.flujo(inserfRQ.astexto());
-                            
-                            String respuesta = comunicacion.flujoRS();
-                            IngresarClienteRS incRS = new IngresarClienteRS();
-                            incRS.build(respuesta);
-                            MensajeRS mincRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INSERT_FACT);
-                            mincRS.setCuerpo(incRS);
-                            output.writeUTF(mincRS.asTexto());
-                        }
+                        
                         break;
                     case Mensaje.INFO_PRODUCT:
+                        if(Mensaje.validaHash(trama)){
+                            String idProducto = trama.substring(85);
+                            idProducto = StringUtils.stripStart(idProducto, " ");
+                            System.out.println("Id_Producto:"+idProducto);
+                            ConsultarRQ infoPro = new ConsultarRQ();
+                            infoPro.setNombreTabla(Mensaje.nombreTablaProducto);
+                            infoPro.setCamposTabla("/");
+                            infoPro.setCodigoIdentificadorColumna("0");
+                            infoPro.setValorCodigoidentificadorColumna(idProducto);
+                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeConsultar);
+                            mconinfCli.setCuerpo(infoPro);
+                            System.out.println("Trama Info Producto "+mconinfCli.asTexto());
+                            
+                            ServBase comunicacion = new ServBase();
+                            comunicacion.conexion();
+                            comunicacion.flujo(mconinfCli.asTexto());
+                            
+                            String respuesta = comunicacion.flujoRS();
+                            InformacionProductoRS infoProRS = new InformacionProductoRS();
+                            infoProRS.build(respuesta);
+                            MensajeRS minfoProRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INFO_PRODUCT);
+                            minfoProRS.setCuerpo(infoProRS);
+                                                       
+                            output.writeUTF(minfoProRS.asTexto());
+                            System.out.println("RespuestaInfCliente: " + minfoProRS.asTexto());
+                        }
                         break;
                     case Mensaje.INSERT_CLIENT:
                         if(Mensaje.validaHash(trama)){
