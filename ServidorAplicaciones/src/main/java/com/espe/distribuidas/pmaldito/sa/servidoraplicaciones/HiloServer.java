@@ -8,6 +8,7 @@ package com.espe.distribuidas.pmaldito.sa.servidoraplicaciones;
 import com.espe.distribuidas.pmaldito.cliente.InformacionClienteRS;
 import com.espe.distribuidas.pmaldito.cliente.IngresarClienteRS;
 import com.espe.distribuidas.pmaldito.factura.IngresarFacturaRQ;
+import com.espe.distribuidas.pmaldito.factura.IngresarFacturaRS;
 import com.espe.distribuidas.pmaldito.originador.Originador;
 import com.espe.distribuidas.pmaldito.pcs.Mensaje;
 import com.espe.distribuidas.pmaldito.pcs.MensajeRS;
@@ -59,7 +60,9 @@ public class HiloServer extends Thread {
 
         while (true) {
             try {
+                System.out.println("Esperando datos.....");
                 String trama = input.readUTF();
+                System.out.println("Datos recibidos.....");
                 System.out.println("trama:"+trama);
                 if (trama.equals("FIN")) {
                     break;
@@ -77,7 +80,7 @@ public class HiloServer extends Thread {
                             AutenticacionRQ auRQ= new AutenticacionRQ();
                             auRQ.setUsuario(usuario);
                             auRQ.setClave(clave);
-                            MensajeRQ mauRQ = new MensajeRQ(Originador.SRV_APLICACION,MensajeBDD.idMensajeAutenticacion);
+                            MensajeRQ mauRQ = new MensajeRQ(Originador.getOriginador(Originador.SRV_APLICACION),MensajeBDD.idMensajeAutenticacion);
                             mauRQ.setCuerpo(auRQ);
                             System.out.println("TramaAutenticacion "+mauRQ.asTexto());
                             
@@ -88,7 +91,7 @@ public class HiloServer extends Thread {
                             String respuesta = comunicacion.flujoRS();
                             AutenticacionRS aurs = new AutenticacionRS();
                             aurs.build(respuesta);
-                            MensajeRS maurs = new MensajeRS(Originador.SRV_APLICACION, Mensaje.AUTENTIC_USER);
+                            MensajeRS maurs = new MensajeRS(Originador.getOriginador(Originador.SRV_APLICACION), Mensaje.AUTENTIC_USER);
                             maurs.setCuerpo(aurs);
                             output.writeUTF(maurs.asTexto());
                             System.out.println("Respuesta: " + maurs.asTexto());
@@ -104,7 +107,7 @@ public class HiloServer extends Thread {
                             coninfCli.setCamposTabla("/");
                             coninfCli.setCodigoIdentificadorColumna("1");
                             coninfCli.setValorCodigoidentificadorColumna(idCliente);
-                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeConsultar);
+                            MensajeRQ mconinfCli = new MensajeRQ(Originador.getOriginador(Originador.SRV_APLICACION), MensajeBDD.idMensajeConsultar);
                             mconinfCli.setCuerpo(coninfCli);
                             System.out.println("Trama Info CLiente "+mconinfCli.asTexto());
                             
@@ -115,7 +118,7 @@ public class HiloServer extends Thread {
                             String respuesta = comunicacion.flujoRS();
                             InformacionClienteRS infclRS = new InformacionClienteRS();
                             infclRS.build(respuesta);
-                            MensajeRS minfclRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INFO_CLIENT);
+                            MensajeRS minfclRS = new MensajeRS(Originador.getOriginador(Originador.SRV_APLICACION), Mensaje.INFO_CLIENT);
                             minfclRS.setCuerpo(infclRS);
                                                        
                             output.writeUTF(minfclRS.asTexto());
@@ -128,14 +131,14 @@ public class HiloServer extends Thread {
                     case Mensaje.INFO_PRODUCT:
                         if(Mensaje.validaHash(trama)){
                             String idProducto = trama.substring(85);
-                            idProducto = StringUtils.stripStart(idProducto, " ");
+                            idProducto = StringUtils.stripEnd(idProducto, " ");
                             System.out.println("Id_Producto:"+idProducto);
                             ConsultarRQ infoPro = new ConsultarRQ();
                             infoPro.setNombreTabla(Mensaje.nombreTablaProducto);
                             infoPro.setCamposTabla("/");
                             infoPro.setCodigoIdentificadorColumna("0");
                             infoPro.setValorCodigoidentificadorColumna(idProducto);
-                            MensajeRQ mconinfCli = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeConsultar);
+                            MensajeRQ mconinfCli = new MensajeRQ(Originador.getOriginador(Originador.SRV_APLICACION), MensajeBDD.idMensajeConsultar);
                             mconinfCli.setCuerpo(infoPro);
                             System.out.println("Trama Info Producto "+mconinfCli.asTexto());
                             
@@ -146,7 +149,7 @@ public class HiloServer extends Thread {
                             String respuesta = comunicacion.flujoRS();
                             InformacionProductoRS infoProRS = new InformacionProductoRS();
                             infoProRS.build(respuesta);
-                            MensajeRS minfoProRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INFO_PRODUCT);
+                            MensajeRS minfoProRS = new MensajeRS(Originador.getOriginador(Originador.SRV_APLICACION), Mensaje.INFO_PRODUCT);
                             minfoProRS.setCuerpo(infoProRS);
                                                        
                             output.writeUTF(minfoProRS.asTexto());
@@ -159,9 +162,9 @@ public class HiloServer extends Thread {
                             InsertarRQ inserRQ = new InsertarRQ();
                             inserRQ.setNombreTabla(Mensaje.nombreTablaCliente);
                             inserRQ.setValorCamposTabla(cuerpo);
-                            MensajeRQ minserRQ = new MensajeRQ(Originador.SRV_APLICACION, MensajeBDD.idMensajeInsertar);
+                            MensajeRQ minserRQ = new MensajeRQ(Originador.getOriginador(Originador.SRV_APLICACION), MensajeBDD.idMensajeInsertar);
                             minserRQ.setCuerpo(inserRQ);
-                            System.out.println("TramaInsertarCliente "+minserRQ.asTexto());
+                            System.out.println("TramaInsertarFactura "+minserRQ.asTexto());
                             
                             ServBase comunicacion = new ServBase();
                             comunicacion.conexion();
@@ -170,7 +173,7 @@ public class HiloServer extends Thread {
                             String respuesta = comunicacion.flujoRS();
                             IngresarClienteRS incRS = new IngresarClienteRS();
                             incRS.build(respuesta);
-                            MensajeRS  mincRS = new MensajeRS(Originador.SRV_APLICACION, Mensaje.INSERT_CLIENT);
+                            MensajeRS  mincRS = new MensajeRS(Originador.getOriginador(Originador.SRV_APLICACION), Mensaje.INSERT_CLIENT);
                             mincRS.setCuerpo(incRS);
                             output.writeUTF(mincRS.asTexto());
                             System.out.println("Respuesta: " + mincRS.asTexto());
@@ -178,6 +181,26 @@ public class HiloServer extends Thread {
                         }
                         break;
                     case Mensaje.INSERT_FACT:
+                        if(Mensaje.validaHash(trama)){
+                            String cuerpo = trama.substring(85);
+                            InsertarRQ inserRQ = new InsertarRQ();
+                            inserRQ.setNombreTabla(Mensaje.nombreTablaFactura);
+                            inserRQ.setValorCamposTabla(cuerpo);
+                            MensajeRQ minserRQ = new MensajeRQ(Originador.getOriginador(Originador.SRV_APLICACION), MensajeBDD.idMensajeInsertar);
+                            minserRQ.setCuerpo(inserRQ);
+                            System.out.println("TramaInsertarCliente "+minserRQ.asTexto());
+                            
+                            ServBase comunicacion = new ServBase();
+                            comunicacion.conexion();
+                            comunicacion.flujo(minserRQ.asTexto());
+                            String respuesta = comunicacion.flujoRS();
+                            IngresarFacturaRS incRS = new IngresarFacturaRS();
+                            incRS.build(respuesta);
+                            MensajeRS  mincRS = new MensajeRS(Originador.getOriginador(Originador.SRV_APLICACION), Mensaje.INSERT_FACT);
+                            mincRS.setCuerpo(incRS);
+                            output.writeUTF(mincRS.asTexto());
+                            System.out.println("Respuesta: " + mincRS.asTexto());
+                        }
                         break;
                     
                 }

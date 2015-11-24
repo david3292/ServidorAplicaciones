@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  */
 public class ServBase {
 
-    private static final String IPBD = "192.168.1.103";
+    private static final String IPBD = "192.168.137.160";
     DataInputStream input = null;
     DataOutputStream output = null;
     Socket comunicacion = null;
